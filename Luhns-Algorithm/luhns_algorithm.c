@@ -32,7 +32,7 @@ struct CreditCardIssuer
 struct CreditCard
 {
     uint64_t number;
-    uint8_t length;
+    uint8_t num_length;
     struct CreditCardIssuer issuer;
     bool valid;
 };
@@ -40,51 +40,94 @@ struct CreditCard
 
 void get_num_from_file(struct CreditCard* credit_card_p);
 void print_credit_card_details(struct CreditCard* credit_card_p);
+void *check_number_length(void *ptr);
 
 
 int main (int argc, char *argv[])
 {
     /* allocate memory for numbers */
-    struct CreditCard* credit_card = NULL;
-    credit_card = malloc(NUMBER_LIST_LENGTH * sizeof(struct CreditCard));
+    struct CreditCard *credit_cards = NULL;
+    credit_cards = malloc(NUMBER_LIST_LENGTH * sizeof(struct CreditCard));
 
     /* program */
-    get_num_from_file(credit_card);
-    print_credit_card_details(credit_card);
+    pthread_t thread1;
+
+    get_num_from_file(credit_cards);
+
+    pthread_create(&thread1, NULL, check_number_length, credit_cards);
+
+    pthread_join(thread1, NULL);
+
+    print_credit_card_details(credit_cards);
 
     /* free allocated memory */
-    free(credit_card);
+    free(credit_cards);
 
     return 0;
 }
 
+void *check_number_length(void *ptr)
+{
+    struct CreditCard *credit_cards_p = (struct CreditCard *) ptr;
+    printf("Thread1 executing function: check_number_length\n");
 
-void print_credit_card_details(struct CreditCard* credit_card_p)
+    const uint8_t RADIX = 10;
+    const uint8_t MIN_NUM_LENGTH = 13;
+    const uint8_t MAX_NUM_LENGTH = 19;
+
+    uint64_t number;
+    uint8_t counter;
+
+    for (int i = 0; i < NUMBER_LIST_LENGTH; i++)
+    {
+        number = credit_cards_p[i].number;
+        counter = 0;
+
+        #pragma unroll
+        while(number > 0)
+        {
+            number = number / RADIX;
+            counter++;
+        }
+
+        credit_cards_p[i].num_length = counter;
+
+        if (credit_cards_p[i].num_length < MIN_NUM_LENGTH ||
+            credit_cards_p[i].num_length > MAX_NUM_LENGTH)
+        {
+            credit_cards_p[i].valid = false;
+        }
+    }
+
+    return NULL;
+}
+
+void print_credit_card_details(struct CreditCard *credit_cards_p)
 {
     for (int i = 0; i < NUMBER_LIST_LENGTH; i++)
     {
-        if (credit_card_p[i].valid)
+        if (credit_cards_p[i].valid)
         {
             printf("%8s", "valid");
             printf(" | ");
-            printf("%20"PRIu64"", credit_card_p[i].number);
-            printf("%2u", credit_card_p[i].length);
-            printf("%2u", credit_card_p[i].issuer.id);
-            printf("%s", credit_card_p[i].issuer.name);
+            printf("%20"PRIu64" ", credit_cards_p[i].number);
+            printf("%2u ", credit_cards_p[i].num_length);
+            printf("%2u ", credit_cards_p[i].issuer.id);
+            printf("%s", credit_cards_p[i].issuer.name);
             printf("\n");
         }
         else
         {
             printf("%8s", "invalid");
             printf(" | ");
-            printf("%"PRIu64"", credit_card_p[i].number);
+            printf("%"PRIu64"", credit_cards_p[i].number);
             printf("\n");
         }
     }
 }
 
 
-void get_num_from_file(struct CreditCard* credit_card_p)
+void get_num_from_file(struct CreditCard *credit_cards_p)
 {
     char filename[] = "list_of_numbers.txt";
     FILE *file_ptr = fopen(filename, "r+e");
@@ -99,11 +142,11 @@ void get_num_from_file(struct CreditCard* credit_card_p)
     #pragma unroll
     for (int i = 0; i < NUMBER_LIST_LENGTH; i++)
     {
-        fscanf(file_ptr, "%"PRIu64"", &credit_card_p[i].number);
-        credit_card_p[i].length = 0;
-        credit_card_p[i].issuer.id = 0;
-        credit_card_p[i].issuer.name = "NONE";
-        credit_card_p[i].valid = false;
+        fscanf(file_ptr, "%"PRIu64"", &credit_cards_p[i].number);
+        credit_cards_p[i].num_length = 0;
+        credit_cards_p[i].issuer.id = 0;
+        credit_cards_p[i].issuer.name = "NONE";
+        credit_cards_p[i].valid = true;
     }
 
     fclose(file_ptr);
