@@ -72,6 +72,21 @@ int main (int argc, char *argv[])
     pthread_join(thread3, NULL);
     pthread_join(thread4, NULL);
 
+    const uint8_t RADIX = 10;
+
+    uint16_t sum = 0;
+
+    for (int i = 0; i < NUMBER_LIST_LENGTH; i++)
+    {
+        sum = 0;
+        sum = credit_cards[i].odd_counter + credit_cards[i].double_even_counter;
+        
+        if (sum % RADIX != 0)
+        {
+            credit_cards[i].valid = false;
+        }
+    }
+
     print_credit_card_details(credit_cards);
 
     /* free allocated memory */
@@ -84,7 +99,7 @@ int main (int argc, char *argv[])
 void *set_odd_sum(void *ptr)
 {
     struct CreditCard *credit_cards_p = (struct CreditCard *) ptr;
-    printf("Thread3 executing function: set_double_even_sum\n");
+    printf("Thread3 executing function: set_odd_sum\n");
 
     const uint8_t RADIX = 10;
 
@@ -168,6 +183,7 @@ void *set_issuer_id(void *ptr)
     printf("Thread2 executing function: set_issuer_id\n");
     
     const uint8_t RADIX = 10;
+    const uint8_t THREE_DIGITS = 100;
 
     uint64_t number;
 
@@ -176,7 +192,7 @@ void *set_issuer_id(void *ptr)
         number = credit_cards_p[i].number;
 
         #pragma unroll
-        while(number > RADIX)
+        while(number > THREE_DIGITS)
         {
             number = number / RADIX;
         }
@@ -185,22 +201,24 @@ void *set_issuer_id(void *ptr)
 
         switch(credit_cards_p[i].issuer.id)
         {
-            case 3:
+            case 34:
+            case 37:
                 credit_cards_p[i].issuer.name = "American Express";
                 break;
-            case 4:
+            case 40 ... 49:
+                credit_cards_p[i].issuer.id = 4;
                 credit_cards_p[i].issuer.name = "Visa";
                 break;
-            case 5:
+            case 51 ... 55:
                 credit_cards_p[i].issuer.name = "Master";
                 break;
-            case 6:
+            case 60 ... 69:
+                credit_cards_p[i].issuer.id = 6;
                 credit_cards_p[i].issuer.name = "Discover";
                 break;
             default:
                 credit_cards_p[i].issuer.id = 0;
                 credit_cards_p[i].valid = false;
-
         }
     }
 
@@ -236,7 +254,7 @@ void *set_number_length(void *ptr)
         if (credit_cards_p[i].num_length < MIN_NUM_LENGTH ||
             credit_cards_p[i].num_length > MAX_NUM_LENGTH)
         {
-            //credit_cards_p[i].valid = false;
+            credit_cards_p[i].valid = false;
         }
     }
 
@@ -255,8 +273,6 @@ void print_credit_card_details(struct CreditCard *credit_cards_p)
             printf("%2u ", credit_cards_p[i].num_length);
             printf("%2u ", credit_cards_p[i].issuer.id);
             printf("%17s ", credit_cards_p[i].issuer.name);
-            printf("%3u ", credit_cards_p[i].double_even_counter);
-            printf("%3u ", credit_cards_p[i].odd_counter);
             printf("\n");
         }
         else
