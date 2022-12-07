@@ -55,7 +55,7 @@ int main (int argc, char *argv[])
 
     /* allocate memory for numbers */
     struct CreditCard *credit_cards = NULL;
-    credit_cards = malloc(argc * sizeof(struct CreditCard));
+    credit_cards = malloc(number_list_length * sizeof(struct CreditCard));
 
     /* program */
     pthread_t thread1;
@@ -316,7 +316,6 @@ void get_num_from_args(int argc, char *argv[], struct CreditCard* credit_cards_p
 {
     for (int i = 1; i < argc; i++)
     {
-        printf("%s\n", argv[i]);
         credit_cards_p[i - 1].number = strtoll(argv[i], NULL, 10);
         credit_cards_p[i - 1].num_length = 0;
         credit_cards_p[i - 1].double_even_counter = 0;
@@ -324,8 +323,5 @@ void get_num_from_args(int argc, char *argv[], struct CreditCard* credit_cards_p
         credit_cards_p[i - 1].issuer.id = 0;
         credit_cards_p[i - 1].issuer.name = "NONE";
         credit_cards_p[i - 1].valid = true;
-
-        printf("%"PRIu64"", credit_cards_p[i - 1].number);
-        printf("\n");
     }
 }
