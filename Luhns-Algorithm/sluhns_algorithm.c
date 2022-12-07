@@ -102,7 +102,6 @@ void *set_odd_sum(void *ptr)
         number = credit_cards_p[i].number;
         counter = 0;
 
-        #pragma unroll
         while (number > 0)
         {
             remainder = number % RADIX;
@@ -138,7 +137,6 @@ void *set_double_even_sum(void *ptr)
         number = credit_cards_p[i].number;
         counter = 0;
 
-        #pragma unroll
         while (number > 0)
         {
             remainder = number % RADIX;
@@ -180,7 +178,6 @@ void *set_issuer_id(void *ptr)
     {
         number = credit_cards_p[i].number;
 
-        #pragma unroll
         while(number > THREE_DIGITS)
         {
             number = number / RADIX;
@@ -231,7 +228,6 @@ void *set_number_length(void *ptr)
         number = credit_cards_p[i].number;
         counter = 0;
 
-        #pragma unroll
         while(number > 0)
         {
             number = number / RADIX;
@@ -287,7 +283,6 @@ void get_num_from_file(struct CreditCard *credit_cards_p)
     }
 
     /* Read number list from file */
-    #pragma unroll
     for (int i = 0; i < NUMBER_LIST_LENGTH; i++)
     {
         fscanf(file_ptr, "%"PRIu64"", &credit_cards_p[i].number);
