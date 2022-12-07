@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-const uint8_t NUMBER_LIST_LENGTH = 10;
+uint8_t number_list_length = 0;
 
 struct CreditCardIssuer
 {
@@ -40,6 +40,7 @@ struct CreditCard
 };
 
 
+void get_num_from_args(int argc, char *argv[], struct CreditCard* credit_cards_p);
 void get_num_from_file(struct CreditCard* credit_cards_p);
 void print_credit_card_details(struct CreditCard* credit_cards_p);
 void *set_number_length(void *ptr);
@@ -50,9 +51,11 @@ void *set_odd_sum(void *ptr);
 
 int main (int argc, char *argv[])
 {
+    number_list_length = argc - 1;
+
     /* allocate memory for numbers */
     struct CreditCard *credit_cards = NULL;
-    credit_cards = malloc(NUMBER_LIST_LENGTH * sizeof(struct CreditCard));
+    credit_cards = malloc(argc * sizeof(struct CreditCard));
 
     /* program */
     pthread_t thread1;
@@ -60,7 +63,8 @@ int main (int argc, char *argv[])
     pthread_t thread3;
     pthread_t thread4;
 
-    get_num_from_file(credit_cards);
+    //get_num_from_file(credit_cards);
+    get_num_from_args(argc, argv, credit_cards);
 
     pthread_create(&thread1, NULL, set_number_length, credit_cards);
     pthread_create(&thread2, NULL, set_issuer_id, credit_cards);
@@ -76,7 +80,7 @@ int main (int argc, char *argv[])
 
     uint16_t sum = 0;
 
-    for (int i = 0; i < NUMBER_LIST_LENGTH; i++)
+    for (int i = 0; i < number_list_length; i++)
     {
         sum = 0;
         sum = credit_cards[i].odd_counter + credit_cards[i].double_even_counter;
@@ -107,7 +111,7 @@ void *set_odd_sum(void *ptr)
     uint8_t remainder;
     uint8_t counter;
 
-    for (int i = 0; i < NUMBER_LIST_LENGTH; i++)
+    for (int i = 0; i < number_list_length; i++)
     {
         credit_cards_p[i].odd_counter = 0;
         number = credit_cards_p[i].number;
@@ -142,7 +146,7 @@ void *set_double_even_sum(void *ptr)
     uint8_t double_remainder;
     uint8_t counter;
 
-    for (int i = 0; i < NUMBER_LIST_LENGTH; i++)
+    for (int i = 0; i < number_list_length; i++)
     {
         credit_cards_p[i].double_even_counter = 0;
         number = credit_cards_p[i].number;
@@ -185,7 +189,7 @@ void *set_issuer_id(void *ptr)
 
     uint64_t number;
 
-    for (int i = 0; i < NUMBER_LIST_LENGTH; i++)
+    for (int i = 0; i < number_list_length; i++)
     {
         number = credit_cards_p[i].number;
 
@@ -234,7 +238,7 @@ void *set_number_length(void *ptr)
     uint64_t number;
     uint8_t counter;
 
-    for (int i = 0; i < NUMBER_LIST_LENGTH; i++)
+    for (int i = 0; i < number_list_length; i++)
     {
         number = credit_cards_p[i].number;
         counter = 0;
@@ -259,7 +263,7 @@ void *set_number_length(void *ptr)
 
 void print_credit_card_details(struct CreditCard *credit_cards_p)
 {
-    for (int i = 0; i < NUMBER_LIST_LENGTH; i++)
+    for (int i = 0; i < number_list_length; i++)
     {
         if (credit_cards_p[i].valid)
         {
@@ -294,7 +298,7 @@ void get_num_from_file(struct CreditCard *credit_cards_p)
     }
 
     /* Read number list from file */
-    for (int i = 0; i < NUMBER_LIST_LENGTH; i++)
+    for (int i = 0; i < number_list_length; i++)
     {
         fscanf(file_ptr, "%"PRIu64"", &credit_cards_p[i].number);
         credit_cards_p[i].num_length = 0;
@@ -308,3 +312,20 @@ void get_num_from_file(struct CreditCard *credit_cards_p)
     fclose(file_ptr);
 }
 
+void get_num_from_args(int argc, char *argv[], struct CreditCard* credit_cards_p)
+{
+    for (int i = 1; i < argc; i++)
+    {
+        printf("%s\n", argv[i]);
+        credit_cards_p[i - 1].number = strtoll(argv[i], NULL, 10);
+        credit_cards_p[i - 1].num_length = 0;
+        credit_cards_p[i - 1].double_even_counter = 0;
+        credit_cards_p[i - 1].odd_counter = 0;
+        credit_cards_p[i - 1].issuer.id = 0;
+        credit_cards_p[i - 1].issuer.name = "NONE";
+        credit_cards_p[i - 1].valid = true;
+
+        printf("%"PRIu64"", credit_cards_p[i - 1].number);
+        printf("\n");
+    }
+}
